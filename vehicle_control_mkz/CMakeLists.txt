@@ -24,6 +24,7 @@ find_package(std_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(dbw_ford_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 #find_package(xsens_mti_ros_node)
 

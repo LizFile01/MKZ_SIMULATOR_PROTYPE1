@@ -8,7 +8,7 @@
 	<arg name="DESIRED_SPEED" default="3.0"/>
 	
 	<!-- Real/sim -->
-	<arg name="SIM" default="SIM"/>
+	<arg name="SIM" default="REAL"/>
 
 	<!--circlefixed_example.dat is a circle of radius 20m for mkz sim -->
 	<!--ENTER /odom_waypoints.dat or /config/circlefixedutm_example.dat -->

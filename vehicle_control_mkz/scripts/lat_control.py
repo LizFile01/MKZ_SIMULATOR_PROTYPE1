@@ -4,10 +4,11 @@ from rclpy.node import Node
 from steering_methods import SteeringMethods
 from dbw_ford_msgs.msg import SteeringCmd
 from vehicle_control_mkz.msg import A9
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import TwistStamped,PoseStamped 
 import yaml
 import os
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy,QoSDurabilityPolicy
+from nav_msgs.msg import Path
 
 
 #### TO CHANGE ROS WORKING DIRECTORY
@@ -63,9 +64,18 @@ class LatController(Node):
 
 		#Get steering angle
 		self.steeringFF = SteeringMethods(self.wpfile,lookAhead,wheelBase,steeringRatio)
+		self.path_msg = Path()
+		self.path_msg.header.frame_id = "world"
+		for pt in self.steeringFF.pathArray:
+			pose = PoseStamped()
+			pose.pose.position.x = pt[0]
+			pose.pose.position.y = pt[1]
+			self.path_msg.poses.append(pose)
+
 		#subscribers
-		self.subOdom = self.create_subscription(A9,'/vehicle/odom2',self.__odom_cb,qs)
-		self.subspeed = self.create_subscription(TwistStamped,"/vehicle/twist",self.lat_speed_cb,qs)
+		self.subOdom = self.create_subscription(A9,'/vehicle/odom2',self.__odom_cb,1)
+		self.subspeed = self.create_subscription(TwistStamped,"/vehicle/twist",self.lat_speed_cb,1)
+		self.msger = self.create_publisher(Path,"/rviz_desired_path",1)
 		#####
 		states = [0]
 		#TIMER
@@ -112,7 +122,7 @@ class LatController(Node):
 
 	def publish(self):
 			self.return_states()
-
+			self.msger.publish(self.path_msg)
 			###
 			if self.flag == 1:
 				self.steeringMsg.steering_wheel_angle_cmd = self.steercmd_f
@@ -128,7 +138,7 @@ class LatController(Node):
 		#Var Speed
 		
 		#self.vCmd = steeringFF.methodAdaptiveVelocity(vMin, vMax, ayLim, curv)
-		steeringFF.methodAdaptiveLookAhead(self.lMin, self.lMax, self.gamma, states[1], states[2], states[3], states[0], self.curv)
+		#steeringFF.methodAdaptiveLookAhead(self.lMin, self.lMax, self.gamma, states[1], states[2], states[3], states[0], self.curv)
 		#limit steer angle 
 		self.steercmd_f = self.sat_limit(self.steercmd,self.steerLim_lower,self.steerLim_upper)
 		print("\n SteerCmd: {} \n Curv: {}".format(self.steercmd_f, self.curv))

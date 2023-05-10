@@ -5,6 +5,8 @@ from vehicle_control_mkz.msg import A9
 #from std_msgs.msg import Float64
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import Imu
+from geometry_msgs.msg import Vector3Stamped
+from geometry_msgs.msg import QuaternionStamped
 from tf_transformations import quaternion_from_euler as QOE
 from tf_transformations import euler_from_quaternion as EFQ
 import utm
@@ -22,10 +24,10 @@ import threading
 # But this hopefully give you an idea of how to use the parameter when you get to that point
 
 class SensorFusionNode(Node):
-    def __init__(self, rate=50):
+    def __init__(self, rate=100):
         super().__init__('Sensor_Fusion_Node')
         # Load the parameters in case you want to use them elsewhere
-        self.declare_parameter('SIM', 'SIM')
+        self.declare_parameter('SIM', 'REAL')
         self.sim = self.get_parameter('SIM').get_parameter_value().string_value
         self.rate = rate
         self.or_flag = 0
@@ -38,14 +40,16 @@ class SensorFusionNode(Node):
                 durability=QoSDurabilityPolicy.SYSTEM_DEFAULT,
                 history=QoSHistoryPolicy.KEEP_LAST, depth=1)
         #FOR SIM ONLY 
-        if self.sim == 'SIM':
-            self.subscription1 = self.create_subscription(Odometry,"/vehicle/ground_truth_odom", self.sim_orientation_cb, 1)
-            self.subscription2 = self.create_subscription(NavSatFix,"/vehicle/gps/fix", self.sim_position_cb, 1)
+        if self.sim == 'REAL':
+            self.subscription1 = self.create_subscription(QuaternionStamped,"/filter/quaternion", self.real_orientation_cb, 1)
+            self.subscription2 = self.create_subscription(Vector3Stamped,"/filter/positionlla", self.real_position_cb, 1)
         
         # For Real MKZ
-        if self.sim == 'REAL':
+        if self.sim == 'SIM':
             # Otherwise use another set of subscibers and callbacks
-            pass
+            self.subscription1 = self.create_subscription(Odometry,"/vehicle/ground_truth_odom", self.sim_orientation_cb, 1)
+            self.subscription2 = self.create_subscription(NavSatFix,"/vehicle/gps/fix", self.sim_position_cb, 1)
+            
         
         #Publish ODOM TOPICS 
         self.publisher1 = self.create_publisher(Odometry,'/vehicle/odom1',1)
@@ -100,6 +104,7 @@ class SensorFusionNode(Node):
         # Fill in the quaternion message
         self.or_flag =1
         self.odomQuat.header = msg.header
+        self.odomQuat.header.frame_id = "world"
         self.odomQuat.pose.pose.orientation = msg.pose.pose.orientation
         
         
@@ -111,33 +116,51 @@ class SensorFusionNode(Node):
         self.odomEuler.roll = euler[0]
         self.odomEuler.pitch = euler[1]
         self.odomEuler.yaw = euler[2]
+ 
      
         # Fill in display print display variable
         self.veh_pose[2] = euler[2]
     
-    # This is kennys prior method for converting the quaternion to euler in my format
-    # def sim_orientation_cb(self, msg: Imu):
-    #     # The IMU message already has a quaternion and the output of this node is also a quaternion
-    #     # Instead you could just do this:
-    #     # self.odomQuat.pose.pose.orientation = msg.orientation
-    #     # And if you need to know yaw for some reason you can still get it from the quaternion
+    def  real_orientation_cb(self, msg: QuaternionStamped):
+        self.or_flag =1
+        self.odomQuat.header = msg.header
+        self.odomQuat.header.frame_id = "world"
+        self.odomQuat.pose.pose.orientation = msg.quaternion
+
         
-    #     # Convert from NED to ENU
-    #     yaw = np.mod(2*np.pi + np.pi/2 - np.radians(msg.orientation.w),2*np.pi)
+        # Get the euler angles from the quaternion
+        euler = EFQ([msg.quaternion.x, msg.quaternion.y, msg.quaternion.z, msg.quaternion.w])
         
-    #     # Convert to quaternion
-    #     q=QOE(0.0, 0.0, yaw)
+        # Fill them into the message
+        self.odomEuler.header = msg.header
+        self.odomEuler.roll = euler[0]
+        self.odomEuler.pitch = euler[1]
+        self.odomEuler.yaw = euler[2]
+        self.veh_pose[2] = euler[2]
+
+
+
+    def real_position_cb(self, msg: Vector3Stamped):
+        # Convert from NED to ENU
+        self. pos_flag = 1
+        utm_pose = utm.from_latlon(msg.vector.x, msg.vector.y)
         
-    #     # Place into message
-    #     self.odomQuat.header = msg.header
-    #     self.odomQuat.pose.pose.orientation.x = q[0]
-    #     self.odomQuat.pose.pose.orientation.y = q[1]
-    #     self.odomQuat.pose.pose.orientation.z = q[2]
-    #     self.odomQuat.pose.pose.orientation.w = q[3]
+        # Fill in class variables
+        self.odomEuler.x = utm_pose[0]
+        self.odomEuler.y = utm_pose[1]
+        self.odomEuler.z = msg.vector.z
         
-    #     self.odomEuler.roll = 0.0
-    #     self.odomEuler.pitch = 0.0
-    #     self.odomEuler.yaw = yaw
+        # Fill in display print display variable
+        self.veh_pose[0] = utm_pose[0]
+        self.veh_pose[1] = utm_pose[1]
+
+        self.odomQuat.pose.pose.position.x = utm_pose[0]	
+        self.odomQuat.pose.pose.position.y = utm_pose[1]
+        self.odomQuat.pose.pose.position.z = msg.vector.z 
+
+        
+    
+
 
 def main(args=None):
     rclpy.init(args=args)

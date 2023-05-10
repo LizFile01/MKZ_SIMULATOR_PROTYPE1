@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
 import numpy as np 
@@ -15,6 +15,9 @@ with open(filename,"r") as f:
     pathArray = np.array([list(map(float, x.split(','))) for x in pathArray])
     pathArray = np.array([[float(y) for y in x] for x in pathArray])
 
+
+
+
 filename_r = os.path.join(here, 'follow_waypoints.dat')
 pathArray2 = []
 
@@ -24,7 +27,7 @@ with open(filename_r,"r") as f:
     pathArray2 = np.array([list(map(float, x.split(','))) for x in pathArray2])
     pathArray2 = np.array([[float(y) for y in x] for x in pathArray2])
 
-
+    
 fig, ax = plt.subplots()
 
 # plot the pathArray using a blue line with circle markers

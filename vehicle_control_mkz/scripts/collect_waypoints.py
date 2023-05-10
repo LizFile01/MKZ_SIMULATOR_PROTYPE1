@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # This script collects waypoints and saves them to textfiles
 # Specifically, it collects gps coordinates to one file
@@ -51,7 +51,7 @@ class Collect_Waypoints(Node):
         self.point[1] = y
         self.pathArray.append([self.point[0], self.point[1]])
         self.i +=1
-        if self.i > 1000:
+        if self.i > 10:
             self.Waypoint_record()
         else:
             pass
