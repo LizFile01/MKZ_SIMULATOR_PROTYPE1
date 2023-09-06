@@ -27,6 +27,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
         ros-humble-navigation2 \
 	    ros-humble-nav2-bringup \
 	    ros-humble-turtlebot3* \
+        ros-humble-velodyne-description \
      && apt purge -y --auto-remove \
      && rm -rf /var/lib/apt/lists/*
      
@@ -60,6 +61,9 @@ RUN cd ~/MKZ_SIMULATOR_PROTOTYPE1 && \
     sudo apt update &&\
     rosdep update && \
     rosdep install --from-paths src --ignore-src -r -y
+
+# Allows the contianer to properly use git along with host
+RUN git config --global --add safe.directory '*'
 
 # Copy entrypoint
 COPY docker/entrypoint.sh /
