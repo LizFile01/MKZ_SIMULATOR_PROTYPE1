@@ -9,7 +9,6 @@ import math
 import numpy as np
 import utm
 from nav_msgs.msg import Odometry
-from vehicle_control_mkz.msg import A9
 import pdb
 import matplotlib.pyplot as plt
 import os

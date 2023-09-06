@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from steering_methods import SteeringMethods
+from .steering_methods import SteeringMethods
 from dbw_ford_msgs.msg import SteeringCmd
-from vehicle_control_mkz.msg import A9
+from mkz_msgs.msg import MkzPose
 from geometry_msgs.msg import TwistStamped
 import yaml
 import os
@@ -64,7 +64,7 @@ class LatController(Node):
 		#Get steering angle
 		self.steeringFF = SteeringMethods(self.wpfile,lookAhead,wheelBase,steeringRatio)
 		#subscribers
-		self.subOdom = self.create_subscription(A9,'/vehicle/odom2',self.__odom_cb,qs)
+		self.subOdom = self.create_subscription(MkzPose,'/vehicle/odom2',self.__odom_cb,qs)
 		self.subspeed = self.create_subscription(TwistStamped,"/vehicle/twist",self.lat_speed_cb,qs)
 		#####
 		states = [0]

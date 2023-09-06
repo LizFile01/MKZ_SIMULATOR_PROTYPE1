@@ -5,25 +5,20 @@
   <arg name="model" default="mkz"/>
   
   <include file="$(find-pkg-share dataspeed_dbw_gazebo)/launch/dataspeed_dbw_gazebo.launch.xml" >
-     <arg name="use_camera_control" value="true" />
+     <!-- <arg name="use_camera_control" value="true" />
      <arg name="world_name" value="$(find-pkg-share dbw_gazebo_mkz)/worlds/test_track.world" />
      <arg name="sim_param_file" value="$(find-pkg-share dbw_gazebo_mkz)/yaml/single_vehicle_test_track.yaml" />
      <arg name="headless" value="false" />
-     <arg name="pause" value="false" />
+     <arg name="pause" value="false" /> -->
 
   </include>  
 
-  <include file="$(find-pkg-share dbw_gazebo_mkz)/launch/generic_dbw_mkz.launch.xml" >
+  <!-- <include file="$(find-pkg-share dbw_gazebo_mkz)/launch/generic_dbw.launch.xml" >
     <arg name="vehicle_name" value="vehicle" />
     <arg name="vehicle_type" value="$(var model)" />
   </include>
   
-  <node pkg="vehicle_control_mkz" exec="gazebo_twister.py" name="vehicle_initialize"/>
+  <node pkg="vehicle_control_mkz" exec="gazebo_twister" name="vehicle_initialize"/> -->
 
   
 </launch>
-
-
-
-
-

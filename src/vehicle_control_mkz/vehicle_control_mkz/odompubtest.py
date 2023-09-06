@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from nav_msgs.msg import Odometry
-from vehicle_control_mkz.msg import A9
+from mkz_msgs.msg import MkzPose
 #from std_msgs.msg import Float64
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import Imu
@@ -49,11 +49,11 @@ class SensorFusionNode(Node):
         
         #Publish ODOM TOPICS 
         self.publisher1 = self.create_publisher(Odometry,'/vehicle/odom1',1)
-        self.publisher2 = self.create_publisher(A9,'/vehicle/odom2',1)
+        self.publisher2 = self.create_publisher(MkzPose,'/vehicle/odom2',1)
         
         # Define global output message variables
         self.odomQuat = Odometry()
-        self.odomEuler = A9()
+        self.odomEuler = MkzPose()
         
         # [x, y, yaw] just for display purposes
         self.veh_pose = [0.0, 0.0, 0.0]

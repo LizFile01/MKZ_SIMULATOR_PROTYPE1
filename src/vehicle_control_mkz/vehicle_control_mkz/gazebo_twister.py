@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
 from std_msgs.msg import Empty
 
 class ROS2Twist(Node):

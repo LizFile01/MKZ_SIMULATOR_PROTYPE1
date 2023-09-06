@@ -119,7 +119,7 @@ fi
 alias sc='. ~/MKZ_SIMULATOR_PROTOTYPE1/install/setup.bash'
 alias build='cd ~/MKZ_SIMULATOR_PROTOTYPE1 && colcon build --symlink-install'
 
-alias sim='ros2 launch dbw_gazebo_mkz Gazebo_mkz_initialize_launch.xml'
+alias sim='ros2 launch dbw_gazebo_mkz gazebo_mkz.launch.xml'
 alias odompub='ros2 run vehicle_control_mkz odompubtest.py'
 
 alias record='ros2 launch vehicle_control_mkz controllaunch.xml IS_CP:=TRUE and set file to /odom_waypoints.dat'
