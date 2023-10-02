@@ -12,7 +12,7 @@ wpmutex = Lock()
 #    USE ESTIMATOR TO GET VEHICLE ODOM FIRST
 
 class SteeringMethods:
-    def __init__(self,filename='default',lookAhead=5.0,wheelBase=2.87,steeringRatio=14.8):
+    def __init__(self,filename='/odom_waypoints.dat ',lookAhead=5.0,wheelBase=2.87,steeringRatio=14.8):
         self.flag = 0
         self.pathArray = []
         with open(filename,"r") as f: 
@@ -20,7 +20,6 @@ class SteeringMethods:
                 self.pathArray.append(line.strip())
         self.pathArray = np.array([list(map(float, x.split(','))) for x in self.pathArray])
         self.pathArray = np.array([[float(y) for y in x] for x in self.pathArray])
-
         self.LA = lookAhead
         self.WB = wheelBase
         self.Sr = steeringRatio	
@@ -105,4 +104,5 @@ class SteeringMethods:
     
     def RVIZ_plugin(self):
         #calling for lat control program to reduce number of loops
-        return self.pathArray
+        if len(self.pathArray) > 1:
+            return self.pathArray

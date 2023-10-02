@@ -28,7 +28,7 @@
 			<param name="DESIRED_SPEED" value="$(var DESIRED_SPEED)"/>
 			<param name="WAYPOINTS_FILE" value="$(var WAYPOINTS_FILE)"/>
 		</node>
-		<node pkg="vehicle_control_mkz" exec="RVIZ.py" name="RVIZ" output="screen"/>
+		<!--node pkg="vehicle_control_mkz" exec="RVIZ.py" name="RVIZ" output="screen"/-->
 	</group>
 		
 	<group if="$(var IS_CP)">

@@ -7,70 +7,50 @@ from std_msgs.msg import Header
 from geometry_msgs.msg import TwistStamped, PoseStamped
 import rclpy
 from rclpy.node import Node
-from steering_methods import SteeringMethods
+from lat_control import LatController
+from dbw_ford_msgs.msg import SteeringCmd
 
 from vehicle_control_mkz.msg import A9
-'''
+
 class RVIZ_Plugin(Node):
     def __init__(self,rate=50):
         super().__init__('RVIZ')
-        self.i = 0
         self.rate = rate
         self.timer = self.create_timer(1/self.rate, self.publish)
-        # WAYPOINT PROCESSOR
-        self.declare_parameter('WAYPOINTS_FILE', '/odom_waypoints.dat')
-        self.path = os.path.dirname(os.path.abspath(__file__))
-        self.WaypointFile = self.get_parameter("WAYPOINTS_FILE").get_parameter_value().string_value
-
-        # JOIN WAYPOINT PATH TO OS 
-        self.wpfile = self.path + self.WaypointFile 
-        self.path_array = []
-
-        with open(self.wpfile, "r") as f:
-            for line in f:
-                self.path_array.append(line.strip())
-
-        self.path_array = np.array([list(map(float, x.split(','))) for x in self.path_array])
-        self.path_array = np.array([[float(y) for y in x] for x in self.path_array])
-
-        # Def Publisher 
-
-        # Create publisher for RVIZ disp 
+        #Global var for RVIZ path
         self.RVIZ_Path = Path()
         self.PoseStampedMsg = PoseStamped()
-        ##
-
-        self.RVIZ_Path.poses.append()
-
+        #Publish msg 
         self.publisher_RVIZ1 = self.create_publisher(Path, '/vehicle/desired_rviz_path', 1)
 
-        
-    def waypoint_store_RVIZ(self):
-        self.i += 1
-        # This is for showing the full path on RVIZ 
-        self.SM = SteeringMethods(self.wpfile)
-        self.path_array = self.SM.RVIZ_plugin()
-        self.poses = PoseArray()
+        #Subscribe to lat_control to get path array: 
+        self.pub_flag = 0
+        self.Steercb = self.create_subscription(SteeringCmd,'/vehicle/steering_cmd',self.steer_cb,1)
 
 
-        # TODO
-        if self.i > (len(self.path_array) - 1):
-            self.i = 0
-            self.poses.pose.position.x = float(self.path_array[self.i][0])
-            self.poses.pose.position.y = float(self.path_array[self.i][1])
-        else:
-            self.poses.pose.position.x = float(self.path_array[self.i][0])
-            self.poses.pose.position.y = float(self.path_array[self.i][1])
 
-            self.Header = Header()
-            self.RVIZ_Path.header.frame_id = "world"
-            self.RVIZ_Path.poses.append(self.poses)
+    def steer_cb(self,msg):
+        #calling path array once feedback is heard from latcontrol
+        LC = LatController()
+        self.path_array = LC.RVIZ_Path()
+        #Get desired RVIZ path 
+        self.Waypoint_plotter_rviz()
 
+    
+    def Waypoint_plotter_rviz(self):
+            for i in range(len(self.path_array) - 1):
+                self.header = Header()
+                self.RVIZ_Path.header.frame_id = "world"
+                self.PoseStampedMsg.pose.position.x = float(self.path_array[i][0])
+                self.PoseStampedMsg.pose.position.y = float(self.path_array[i][1])
+                self.PoseStampedMsg.header.frame_id = "world"
+                self.RVIZ_Path.poses.append(self.PoseStampedMsg)
+            self.pub_flag = 1 
+
+          
     def publish(self):
-        self.waypoint_store_RVIZ()
-
-        # Def display for RVIZ
-        self.publisher_RVIZ1.publish(self.RVIZ_Path)
+        if self.pub_flag == 1:
+            self.publisher_RVIZ1.publish(self.RVIZ_Path)
 
 def main(args=None):
     rclpy.init(args=args)
@@ -81,4 +61,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-'''

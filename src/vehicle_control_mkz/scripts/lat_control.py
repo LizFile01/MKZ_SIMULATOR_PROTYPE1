@@ -22,7 +22,7 @@ import os
 
 #QOS 
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy,QoSDurabilityPolicy
-# FOR RVIZ Display
+
 
 from visualization_msgs.msg import Marker
 from std_msgs.msg import Header
@@ -71,13 +71,6 @@ class LatController(Node):
 		self.gamma = data_loaded['Adaptive']['gamma']
 		self.ayLim = data_loaded['Adaptive']['ayLim']
 
-		#Global var for RVIZ path
-		self.RVIZ_Path = Path()
-		self.PoseStampedMsg = PoseStamped()
-
-		#Publish msg 
-		self.publisher_RVIZ1 = self.create_publisher(Path, '/vehicle/desired_rviz_path', 1)
-
 		#args
 		self.steeringMsg = SteeringCmd()
 		self.steeringMsg.enable = True
@@ -85,12 +78,6 @@ class LatController(Node):
 
 		#Get steering angle
 		self.steeringFF = SteeringMethods(self.wpfile,lookAhead,wheelBase,steeringRatio)
-		self.get_logger().info("Before")
-		self.path_array = self.steeringFF.RVIZ_plugin()
-		self.get_logger().info("After")
-
-		#Get desired RVIZ path 
-		self.Waypoint_plotter_rviz()
 
 		#subscribers
 		self.subOdom = self.create_subscription(A9,'/vehicle/odom2',self.__odom_cb,1)
@@ -151,20 +138,22 @@ class LatController(Node):
 			if self.flag == 1:
 				self.steeringMsg.steering_wheel_angle_cmd = self.steercmd_f
 				self.pubSteer.publish(self.steeringMsg)	
-				self.publisher_RVIZ1.publish(self.RVIZ_Path)
 				#self.get_logger().info("Publishing Lateral Controller")
 
 
 	def steering(self,states,steeringFF):
 		#Steering Angle
-		self.steercmd,self.curv,self.absoluteBearing,self.relativeBearing,self.targetPoint = steeringFF.methodPurePursuit(states[1],states[2],states[3])
+		self.steercmd,self.curv,self.absoluteBearing,self.relativeBearing,self.targetPoint = self.steeringFF.methodPurePursuit(states[1],states[2],states[3])
 		#get waypoints from Steering methods script
 		#self.vCmd = steeringFF.methodAdaptiveVelocity(vMin, vMax, ayLim, curv)
-		steeringFF.methodAdaptiveLookAhead(self.lMin, self.lMax, self.gamma, states[1], states[2], states[3], states[0], self.curv)
+		self.steeringFF.methodAdaptiveLookAhead(self.lMin, self.lMax, self.gamma, states[1], states[2], states[3], states[0], self.curv)
 		#limit steer angle 
 		self.steercmd_f = self.sat_limit(self.steercmd,self.steerLim_lower,self.steerLim_upper)
 		#print("\n SteerCmd: {} \n Curv: {}".format(self.steercmd_f, self.curv)) uncomment for debugging 
 
+	def RVIZ_Path(self):
+		#LOOKS STUPID BUT PASSING RVIZ PATH 
+		return self.steeringFF.RVIZ_plugin()
 
 	def sat_limit(self,val,low,upper):
 		#steering angle control params
@@ -175,18 +164,6 @@ class LatController(Node):
 		else:
 			return val
 		
-	def Waypoint_plotter_rviz(self):
-		for i in range(len(self.path_array) - 1):
-			self.header = Header()
-			self.RVIZ_Path.header.frame_id = "world"
-			#self.RVIZ_Path.poses = []
-			self.PoseStampedMsg.pose.position.x = float(self.path_array[i][0])
-			self.PoseStampedMsg.pose.position.y = float(self.path_array[i][1])
-			self.PoseStampedMsg.header.frame_id = "world"
-			self.RVIZ_Path.poses.append(self.PoseStampedMsg)
-			i += 10
-		self.get_logger().info("Complete")
-
 	
 
 def main(args=None):
